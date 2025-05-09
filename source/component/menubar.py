@@ -297,7 +297,7 @@ class Panel():
     def checkCardClick(self, mouse_pos):
         delete_card = None
         for card in self.selected_cards:
-            if delete_card: # when delete a card, move right cards to left
+            if delete_card: # 删除卡片时，将右侧卡片向左移动，如果delete_card不为空，说明当前卡片已经在待删除卡片之后了。
                 card.rect.x -= c.BAR_CARD_X_INTERNAL
             elif card.checkMouseClick(mouse_pos):
                 self.deleteCard(card.index)

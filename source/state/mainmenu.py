@@ -90,19 +90,19 @@ class Menu(tool.State):
 
     def checkHilight(self, x:int, y:int):
         # 高亮冒险模式按钮
-        if self.inArea(self.adventure_rect, x, y):
+        if tool.inArea(self.adventure_rect, x, y):
             self.adventure_highlight_time = self.current_time
         # 高亮小游戏按钮
-        elif self.inArea(self.littleGame_rect, x, y):
+        elif tool.inArea(self.littleGame_rect, x, y):
             self.littleGame_highlight_time = self.current_time
         # 高亮退出按钮
-        elif self.inArea(self.exit_rect, x, y):
+        elif tool.inArea(self.exit_rect, x, y):
             self.exit_highlight_time = self.current_time
         # 高亮选项按钮
-        elif self.inArea(self.option_button_rect, x, y):
+        elif tool.inArea(self.option_button_rect, x, y):
             self.option_button_highlight_time = self.current_time
         # 高亮帮助按钮
-        elif self.inArea(self.help_rect, x, y):
+        elif tool.inArea(self.help_rect, x, y):
             self.help_hilight_time = self.current_time
 
         # 处理按钮高亮情况
@@ -207,7 +207,7 @@ class Menu(tool.State):
             self.sunflower_trophy_show_info_time = 0
 
     def checkSunflowerTrophyInfo(self, surface:pg.Surface, x:int, y:int):
-        if self.inArea(self.sunflower_trophy_rect, x, y):
+        if tool.inArea(self.sunflower_trophy_rect, x, y):
             self.sunflower_trophy_show_info_time = self.current_time
         if (self.current_time - self.sunflower_trophy_show_info_time) < 80:
             font = pg.font.Font(c.FONT_PATH, 14)
@@ -251,7 +251,7 @@ class Menu(tool.State):
 
         # 点到冒险模式后播放动画
         if self.adventure_clicked:
-            # 乱写一个不用信号标记的循环播放 QwQ
+            # 150ms切换一次图片，闪烁效果
             if ((self.current_time - self.adventure_timer) // 150) % 2:
                 self.adventure_image = self.adventure_frames[1]
             else:
@@ -266,29 +266,33 @@ class Menu(tool.State):
             surface.blit(self.sound_volume_minus_button, self.sound_volume_minus_button_rect)
             self.showCurrentVolumeImage(surface)
             if mouse_pos:
+                bIsClick = False
                 # 返回
-                if self.inArea(self.return_button_rect, *mouse_pos):
+                if tool.inArea(self.return_button_rect, *mouse_pos):
                     self.option_button_clicked = False
-                    c.SOUND_BUTTON_CLICK.play()
+                    bIsClick = True
                 # 音量+
-                elif self.inArea(self.sound_volume_plus_button_rect, *mouse_pos):
+                elif tool.inArea(self.sound_volume_plus_button_rect, *mouse_pos):
                     self.game_info[c.SOUND_VOLUME] = round(min(self.game_info[c.SOUND_VOLUME] + 0.05, 1), 2)
                     # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
                     pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
                     for i in c.SOUNDS:
                         i.set_volume(self.game_info[c.SOUND_VOLUME])
-                    c.SOUND_BUTTON_CLICK.play()
+                    bIsClick = True
                     self.saveUserData()
                 # 音量-
-                elif self.inArea(self.sound_volume_minus_button_rect, *mouse_pos):
+                elif tool.inArea(self.sound_volume_minus_button_rect, *mouse_pos):
                     self.game_info[c.SOUND_VOLUME] = round(max(self.game_info[c.SOUND_VOLUME] - 0.05, 0), 2)
                     # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
                     pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
                     for i in c.SOUNDS:
                         i.set_volume(self.game_info[c.SOUND_VOLUME])
-                    c.SOUND_BUTTON_CLICK.play()
+                    bIsClick = True
                     self.saveUserData()
-        # 没有点到前两者时常规行检测所有按钮的点击和高亮
+
+                if bIsClick:
+                    c.SOUND_BUTTON_CLICK.play()
+        # 没有点到前两者时常规行检测所有按钮的点击和高亮，前两者能执行也是需要先走这里。
         else:
             # 先检查选项高亮预览
             x, y = pg.mouse.get_pos()
@@ -296,13 +300,13 @@ class Menu(tool.State):
             if (self.game_info[c.LEVEL_COMPLETIONS] or self.game_info[c.LITTLEGAME_COMPLETIONS]):
                 self.checkSunflowerTrophyInfo(surface, x, y)
             if mouse_pos:
-                if self.inArea(self.adventure_rect, *mouse_pos):
+                if tool.inArea(self.adventure_rect, *mouse_pos):
                     self.respondAdventureClick()
-                elif self.inArea(self.littleGame_rect, *mouse_pos):
+                elif tool.inArea(self.littleGame_rect, *mouse_pos):
                     self.respondLittleGameClick()
-                elif self.inArea(self.option_button_rect, *mouse_pos):
+                elif tool.inArea(self.option_button_rect, *mouse_pos):
                     self.respondOptionButtonClick()
-                elif self.inArea(self.exit_rect, *mouse_pos):
+                elif tool.inArea(self.exit_rect, *mouse_pos):
                     self.respondExitClick()
-                elif self.inArea(self.help_rect, *mouse_pos):
+                elif tool.inArea(self.help_rect, *mouse_pos):
                     self.respondHelpClick()

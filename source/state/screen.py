@@ -55,11 +55,11 @@ class Screen(tool.State):
         surface.blit(self.image, self.rect)
         if mouse_pos:
             # 点到继续
-            if self.inArea(self.next_button_image_rect, *mouse_pos):
+            if tool.inArea(self.next_button_image_rect, *mouse_pos):
                 self.next = c.LEVEL
                 self.done = True
             # 点到主菜单
-            elif self.inArea(self.main_menu_button_image_rect, *mouse_pos):
+            elif tool.inArea(self.main_menu_button_image_rect, *mouse_pos):
                 self.next = c.MAIN_MENU
                 self.done = True
 
@@ -206,11 +206,11 @@ class AwardScreen(tool.State):
         surface.blit(self.image, self.rect)
         if mouse_pos:
             # 检查主菜单点击
-            if self.inArea(self.main_menu_button_image_rect, *mouse_pos):
+            if tool.inArea(self.main_menu_button_image_rect, *mouse_pos):
                 self.next = c.MAIN_MENU
                 self.done = True
             elif not self.show_only_one_option:
-                if self.inArea(self.next_button_image_rect, *mouse_pos):
+                if tool.inArea(self.next_button_image_rect, *mouse_pos):
                     self.next = c.LEVEL
                     self.done = True
 
@@ -254,6 +254,6 @@ class HelpScreen(tool.State):
         surface.blit(self.image, self.rect)
         if mouse_pos:
             # 检查主菜单点击
-            if self.inArea(self.main_menu_button_image_rect, *mouse_pos):
+            if tool.inArea(self.main_menu_button_image_rect, *mouse_pos):
                 self.next = c.MAIN_MENU
                 self.done = True

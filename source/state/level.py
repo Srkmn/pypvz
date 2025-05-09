@@ -12,6 +12,7 @@ class Level(tool.State):
         tool.State.__init__(self)
 
     def startup(self, current_time, persist):
+        # 获取上下文和时间
         self.game_info = persist
         self.persist = self.game_info
         self.game_info[c.CURRENT_TIME] = current_time
@@ -250,20 +251,19 @@ class Level(tool.State):
             if (self.wave_time == 0):    # 表明刚刚开始游戏
                 self.wave_time = current_time
             else:
-                if (survival_rounds == 0) and (self.bar_type == c.CHOOSEBAR_STATIC): # 首次选卡等待时间较长
-                    if current_time - self.wave_time >= 18000:
-                        self.wave_num += 1
-                        self.wave_time = current_time
-                        self.wave_zombies = self.waves[self.wave_num - 1]
-                        self.zombie_num = len(self.wave_zombies)
-                        c.SOUND_ZOMBIE_COMING.play()
+                bIsStatic = (survival_rounds == 0) and (self.bar_type == c.CHOOSEBAR_STATIC)
+                delayTime = 0
+                if bIsStatic:
+                    delayTime = 18000
                 else:
-                    if (current_time - self.wave_time >= 6000):
-                        self.wave_num += 1
-                        self.wave_time = current_time
-                        self.wave_zombies = self.waves[self.wave_num - 1]
-                        self.zombie_num = len(self.wave_zombies)
-                        c.SOUND_ZOMBIE_COMING.play()
+                    delayTime = 6000
+                
+                if current_time - self.wave_time >= delayTime:
+                    self.wave_num += 1
+                    self.wave_time = current_time
+                    self.wave_zombies = self.waves[self.wave_num - 1]
+                    self.zombie_num = len(self.wave_zombies)
+                    c.SOUND_ZOMBIE_COMING.play()
             return
         if (self.wave_num % 10 != 9):
             if ((current_time - self.wave_time >= 25000 + random.randint(0, 6000)) or (self.bar_type == c.CHOOSEBAR_BOWLING and current_time - self.wave_time >= 12500 + random.randint(0, 3000))):
@@ -373,7 +373,7 @@ class Level(tool.State):
             self.panel.checkCardClick(mouse_pos)
             if self.panel.checkStartButtonClick(mouse_pos):
                 self.initPlay(self.panel.getSelectedCards())
-            elif self.inArea(self.little_menu_rect, *mouse_pos):
+            elif tool.inArea(self.little_menu_rect, *mouse_pos):
                 self.show_game_menu = True
                 c.SOUND_BUTTON_CLICK.play()
 
@@ -552,7 +552,7 @@ class Level(tool.State):
         pg.mixer.music.pause()
         if mouse_click[0]:
             # 返回键
-            if self.inArea(self.return_button_rect, *mouse_pos):
+            if tool.inArea(self.return_button_rect, *mouse_pos):
                 # 终止暂停，停止显示菜单
                 self.pause = False
                 self.show_game_menu = False
@@ -561,13 +561,13 @@ class Level(tool.State):
                 # 播放点击音效
                 c.SOUND_BUTTON_CLICK.play()
             # 重新开始键
-            elif self.inArea(self.restart_button_rect, *mouse_pos):
+            elif tool.inArea(self.restart_button_rect, *mouse_pos):
                 self.done = True
                 self.next = c.LEVEL
                 # 播放点击音效
                 c.SOUND_BUTTON_CLICK.play()
             # 主菜单键
-            elif self.inArea(self.mainMenu_button_rect, *mouse_pos):
+            elif tool.inArea(self.mainMenu_button_rect, *mouse_pos):
                 self.done = True
                 self.next = c.MAIN_MENU
                 self.persist = self.game_info
@@ -575,7 +575,7 @@ class Level(tool.State):
                 # 播放点击音效
                 c.SOUND_BUTTON_CLICK.play()
             # 音量+
-            elif self.inArea(self.sound_volume_plus_button_rect, *mouse_pos):
+            elif tool.inArea(self.sound_volume_plus_button_rect, *mouse_pos):
                 self.game_info[c.SOUND_VOLUME] = round(min(self.game_info[c.SOUND_VOLUME] + 0.05, 1), 2)
                 # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
                 pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
@@ -584,7 +584,7 @@ class Level(tool.State):
                 c.SOUND_BUTTON_CLICK.play()
                 # 将音量信息存档
                 self.saveUserData()
-            elif self.inArea(self.sound_volume_minus_button_rect, *mouse_pos):
+            elif tool.inArea(self.sound_volume_minus_button_rect, *mouse_pos):
                 self.game_info[c.SOUND_VOLUME] = round(max(self.game_info[c.SOUND_VOLUME] - 0.05, 0), 2)
                 # 一般不会有人想把音乐和音效分开设置，故pg.mixer.Sound.set_volume()和pg.mixer.music.set_volume()需要一起用
                 pg.mixer.music.set_volume(self.game_info[c.SOUND_VOLUME])
@@ -742,13 +742,13 @@ class Level(tool.State):
 
         # 检查是否点击菜单
         if mouse_click[0] and (not clicked_sun) and (not clicked_cards_or_map):
-            if self.inArea(self.little_menu_rect, *mouse_pos):
+            if tool.inArea(self.little_menu_rect, *mouse_pos):
                 # 暂停 显示菜单
                 self.show_game_menu = True
                 # 播放点击音效
                 c.SOUND_BUTTON_CLICK.play()
             elif self.has_shovel:
-                if self.inArea(self.shovel_box_rect, *mouse_pos):
+                if tool.inArea(self.shovel_box_rect, *mouse_pos):
                     self.drag_shovel = not self.drag_shovel
                     if not self.drag_shovel:
                         self.removeMouseImagePlus()

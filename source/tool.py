@@ -10,7 +10,6 @@ logger = logging.getLogger("main")
 # 状态机 抽象基类
 class State():
     def __init__(self):
-        self.start_time = 0
         self.current_time = 0
         self.done = False   # false 代表未做完
         self.next = None    # 表示这个状态退出后要转到的下一个状态
@@ -31,16 +30,11 @@ class State():
         # 前面加了@abstractmethod表示抽象基类中必须要重新定义的method
         pass
 
-    # 工具：范围判断函数，用于判断点击
-    def inArea(self, rect:pg.Rect, x:int, y:int):
-        if (rect.x <= x <= rect.right and
-            rect.y <= y <= rect.bottom):
-            return True
-        else:
-            return False
-
-    # 工具：用户数据保存函数
+    # 用户数据保存函数
     def saveUserData(self):
+        if not os.path.exists(os.path.dirname(c.USERDATA_PATH)):
+            os.makedirs(os.path.dirname(c.USERDATA_PATH))
+
         with open(c.USERDATA_PATH, "w", encoding="utf-8") as f:
             userdata = {}
             for i in self.game_info:
@@ -91,7 +85,7 @@ class Control():
         self.game_info[c.CURRENT_TIME] = 0
 
         # 50为目前的基础帧率，乘以倍率即是游戏帧率
-        self.fps = 50 * self.game_info[c.GAME_RATE]
+        self.fps = 120 * self.game_info[c.GAME_RATE]
 
     def setupUserData(self):
         if not os.path.exists(os.path.dirname(c.USERDATA_PATH)):
@@ -107,27 +101,27 @@ class Control():
         self.state = self.state_dict[self.state_name]
         self.state.startup(self.current_time, self.game_info)
 
+    def run(self):
+        while not self.done:
+            self.event_loop()
+            self.update()
+            pg.display.update()
+            self.postUpdate()
+
     def update(self):
         # 自 pygame_init() 调用以来的毫秒数 * 游戏速度倍率，即游戏时间
         self.current_time = pg.time.get_ticks() * self.game_info[c.GAME_RATE]
 
         if self.state.done:
             self.flip_state()
-            
         self.state.update(self.screen, self.current_time, self.mouse_pos, self.mouse_click)
+
+    def postUpdate(self):
         self.mouse_pos = None
         self.mouse_click[0] = False
         self.mouse_click[1] = False
 
-    # 状态转移
-    def flip_state(self):
-        if self.state.next == c.EXIT:
-            pg.quit()
-            os._exit(0)
-        self.state_name = self.state.next
-        persist = self.state.cleanup()
-        self.state = self.state_dict[self.state_name]
-        self.state.startup(self.current_time, persist)
+        self.clock.tick(self.fps)
 
     def event_loop(self):
         for event in pg.event.get():
@@ -147,27 +141,38 @@ class Control():
                 # self.mouse_click[0]表示左键，self.mouse_click[1]表示右键
                 print(f"点击位置: ({self.mouse_pos[0]:3}, {self.mouse_pos[1]:3}) 左右键点击情况: {self.mouse_click}")
 
+    # 状态转移
+    def flip_state(self):
+        if self.state.next == c.EXIT:
+            pg.quit()
+            os._exit(0)
+        self.state_name = self.state.next
+        persist = self.state.cleanup()
+        self.state = self.state_dict[self.state_name]
+        self.state.startup(self.current_time, persist)
 
-    def run(self):
-        while not self.done:
-            self.event_loop()
-            self.update()
-            pg.display.update()
-            self.clock.tick(self.fps)
+# 范围判断函数，用于判断点击
+def inArea(rect:pg.Rect, x:int, y:int):
+    if (rect.x <= x <= rect.right and
+        rect.y <= y <= rect.bottom):
+        return True
+    else:
+        return False
 
+# 参数含义：原始图片，裁剪的x区域，裁剪的y区域，宽度，高度，颜色，缩放。
 def get_image(  sheet:pg.Surface, x:int, y:int, width:int, height:int,
                 colorkey:tuple[int]=c.BLACK, scale:int=1) -> pg.Surface:
-        # 不保留alpha通道的图片导入
-        image = pg.Surface([width, height])
-        rect = image.get_rect()
+    # 不保留alpha通道的图片导入
+    image = pg.Surface([width, height])
+    rect = image.get_rect()
 
-        image.blit(sheet, (0, 0), (x, y, width, height))
-        if colorkey:
-            image.set_colorkey(colorkey)
-        image = pg.transform.scale(image,
-                                   (int(rect.width*scale),
-                                    int(rect.height*scale)))
-        return image
+    image.blit(sheet, (0, 0), (x, y, width, height))
+    if colorkey:
+        image.set_colorkey(colorkey)
+    image = pg.transform.scale(image,
+                                (int(rect.width*scale),
+                                int(rect.height*scale)))
+    return image
 
 def get_image_alpha(sheet:pg.Surface, x:int, y:int, width:int, height:int,
                     colorkey:tuple[int]=c.BLACK, scale:int=1) -> pg.Surface:
@@ -243,10 +248,5 @@ def load_all_gfx(   directory:str, colorkey:tuple[int]=c.WHITE,
                         graphics[name] = img
     return graphics
 
-pg.display.set_caption(c.ORIGINAL_CAPTION)  # 设置标题
 SCREEN = pg.display.set_mode(c.SCREEN_SIZE) # 设置初始屏幕
-pg.mixer.set_num_channels(255)  # 设置可以同时播放的音频数量，默认为8，经常不够用
-if os.path.exists(c.ORIGINAL_LOGO):    # 设置窗口图标，仅对非Nuitka时生效，Nuitka不需要包括额外的图标文件，自动跳过这一过程即可
-    pg.display.set_icon(pg.image.load(c.ORIGINAL_LOGO))
-
 GFX = load_all_gfx(c.PATH_IMG_DIR)
