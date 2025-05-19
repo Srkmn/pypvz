@@ -2,12 +2,12 @@ import os
 import pygame as pg
 
 # 用户数据及日志存储路径
-if os.name == "nt": # Windows系统存储路径
-    USERDATA_PATH = os.path.expandvars(os.path.join("%APPDATA%", "pypvz", "userdata.json"))
-    USERLOG_PATH = os.path.expandvars(os.path.join("%APPDATA%", "pypvz", "run.log"))
-else:   # 非Windows系统存储路径
-    USERDATA_PATH = os.path.expanduser(os.path.join("~", ".config", "pypvz", "userdata.json"))
-    USERLOG_PATH = os.path.expanduser(os.path.join("~", ".config", "pypvz", "run.log"))
+if os.name == "nt":  # Windows系统存储路径  
+    USERLOG_PATH = os.path.expandvars(os.path.join("%APPDATA%", "pypvz", "run.log"))  
+    DB_PATH = os.path.expandvars(os.path.join("%APPDATA%", "pypvz", "userdata.db"))  
+else:  # 非Windows系统存储路径  
+    USERLOG_PATH = os.path.expanduser(os.path.join("~", ".config", "pypvz", "run.log"))  
+    DB_PATH = os.path.expanduser(os.path.join("~", ".config", "pypvz", "userdata.db"))  
 
 # 游戏图片资源路径
 PATH_IMG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "graphics")

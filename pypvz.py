@@ -38,7 +38,7 @@ if __name__ == "__main__":
         game = tool.Control()
         state_dict = {
             c.MAIN_MENU: mainmenu.Menu(),
-            c.GAME_VICTORY: screen.GameVictoryScreen(),
+            c.GAME_VICTORY: screen.GameVictoryScreen(), 
             c.GAME_LOSE: screen.GameLoseScreen(),
             c.LEVEL: level.Level(),
             c.AWARD_SCREEN: screen.AwardScreen(),
